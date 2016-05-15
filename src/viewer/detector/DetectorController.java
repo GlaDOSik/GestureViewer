@@ -65,23 +65,23 @@ public class DetectorController {
                 @Override
                 public void run() {
                     System.out.println("press");
-                    //robot.mousePress(1);
+                    robot.mousePress(1);
                 }
             });
         }
         //pokud prst byl natažen, ale teď není - puštění
         else if (gesture != 1 && prevGesture == 1) {
             System.out.println("release");
-            //robot.mouseRelease(1);
+            robot.mouseRelease(1);
         }
         else if (gesture == 2) {
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
                     System.out.println("Pravý klik");
-                    /*
+                    
                     robot.mousePress(2);
-                    robot.mouseRelease(2);*/
+                    robot.mouseRelease(2);
                 }
             });
         }

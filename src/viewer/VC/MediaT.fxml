@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.media.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.MediaView?>
+
+<VBox xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="viewer.VC.MediaTController">
+   <children>
+      <MediaView fx:id="mediaView" fitHeight="300.0" fitWidth="300.0" VBox.vgrow="ALWAYS" />
+      <HBox alignment="CENTER" prefWidth="600.0" spacing="10.0">
+         <children>
+            <Label fx:id="lblTime" prefWidth="40.0" />
+            <Slider fx:id="sliderTime" blockIncrement="1.0" prefWidth="300.0" value="10.0" />
+            <ToggleButton fx:id="btnPause" mnemonicParsing="false" onAction="#pauseMedium" />
+            <Slider fx:id="sliderVolume" blockIncrement="0.01" max="1.0" prefWidth="100.0" value="0.4" />
+            <Label fx:id="lblVolume" maxWidth="100.0" minWidth="100.0" text="Hlasitost: 40 %" />
+         </children>
+         <VBox.margin>
+            <Insets left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+   </children>
+</VBox>

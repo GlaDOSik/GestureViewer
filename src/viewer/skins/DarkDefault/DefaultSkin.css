@@ -1,0 +1,314 @@
+/* 
+    Default Skin Dark
+    Created on : 15.1.2016, 19:06:18
+    Author     : Luděk Novotný
+*/
+@font-face {
+    font-family: OpenSans;
+    src: url("OpenSans-Regular.ttf");
+}
+
+.root{
+    -fx-background-color: #23222c;
+    -fx-accent: transparent;
+    -fx-focus-color: transparent;
+    
+}
+.label{
+    -fx-text-fill: white;
+    -fx-font: 14px "OpenSans";
+}
+
+.text-field{
+    -fx-background-radius: 0;
+    -fx-background-color: #d6d9df;    
+    -fx-font: 14px "OpenSans";
+    -fx-text-fill: black;
+    -fx-highlight-text-fill: #ff5b02;
+}
+
+.button{
+    -fx-background-radius: 0;
+    -fx-background-color: #23222c;
+    -fx-font: 14px "OpenSans";
+    -fx-text-fill: white;
+    -fx-background-insets: 0
+}
+.button:hover{
+    -fx-background-color: #3f7692;    
+}
+
+
+.color-picker{
+    -fx-background-color: #23222c;
+}
+
+.separator:horizontal .line{
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: white;
+}
+
+.separator:vertical .line{
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: white;
+}
+
+.corner{
+    -fx-background-color: transparent;
+}
+.scroll-bar{
+    -fx-background-color: transparent;
+}
+.scroll-bar .decrement-button,
+.scroll-bar .increment-button{
+    visibility: hidden;
+}
+.scroll-bar .decrement-arrow,
+.scroll-bar .increment-arrow{
+    visibility: hidden;
+    -fx-padding:0; }
+
+
+.scroll-bar .thumb{
+    -fx-background-radius: 0;
+    -fx-background-color: #d6d9df;
+}
+
+.check-box .box{
+    -fx-background-color: #3f7692;
+    -fx-background-radius: 0;    
+}
+.check-box{
+    -fx-text-fill: white;
+    -fx-font: 14px "OpenSans";
+}
+
+.check-box:selected .mark{
+    -fx-background-image: url("check.png");
+    -fx-background-color: transparent;
+    -fx-background-repeat: no-repeat;
+    -fx-shape: null;
+}
+
+
+
+/* LAYERS DOCK */
+.titled-pane{
+    -fx-font: 14px "OpenSans";
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+}
+.titled-pane .title{    
+    -fx-background-color: #282f3d;
+    -fx-background-radius: 0;  
+}
+
+.titled-pane .title .arrow-button .arrow{
+    -fx-shape: null;
+    -fx-background-image: url("small-arrow-down.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: transparent;
+    -fx-padding: 6;
+}
+.titled-pane .content{
+    -fx-border-color: #23222c;
+    -fx-background-color: #23222c;
+}
+
+.menu-button{
+    -fx-background-color: #282f3d;
+}
+
+.list-cell {
+    -fx-background-color: #282f3d;
+}
+
+.list-cell:selected{
+    -fx-background-color: #3f7692;
+}
+
+
+/*SCROOL BAR*/
+.scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+.scroll-pane{
+    -fx-background-insets: 0;
+    -fx-background-color: #282f3d;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+}
+
+/*TAB PANE*/
+.tab-label{
+    -fx-text-fill: white;
+    -fx-font: 14px "OpenSans";
+}
+
+.tab{
+    -fx-background-color: #282f3d;
+    -fx-background-radius: 0; 
+    -fx-background-insets: 0 5 0 0;
+    -fx-padding: 0 10 0 5;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent; 
+    
+}
+.tab:selected{
+    -fx-background-color: #3f7692;  
+}
+
+.tab-close-button{
+    -fx-background-color: transparent;
+    -fx-background-repeat: no-repeat;
+    -fx-background-image: url("button-close.png");
+    -fx-snap-to-pixel: true;
+    -fx-shape: null;
+    -fx-background-position: 4 4;
+}
+.tab-header-background{
+    -fx-background-color: #23222c;
+}
+.tab-pane{
+    -fx-background-color: #282f3d; 
+}
+
+/*PŘEDĚLAT*/
+.check-menu-item:checked .check{ 
+    -fx-padding: 0;
+    -fx-border-insets: 7;
+    -fx-border-color: transparent;
+    -fx-background-image: url("check.png");
+    -fx-background-color: transparent;
+    -fx-background-repeat: no-repeat;
+    -fx-shape: null;
+}
+
+/*MENU BAR*/
+.menu-bar{
+    -fx-background-color: #282f3d; 
+    -fx-padding: 0 0 3 0;
+}
+.menu-bar .label{
+    -fx-text-fill: white;
+    -fx-font: 14px "OpenSans";
+}
+.menu-bar .menu{
+    -fx-background-color: transparent;
+    
+}
+.menu-bar .menu:hover{
+    -fx-background-color: #3f7692;        
+}
+.context-menu{
+    -fx-background-color: transparent;
+}
+.menu-item:hover{
+    -fx-background-color: #3f7692;
+}
+
+/*WINDOW STYLE*/
+#leftButton{
+    -fx-graphic: url("left-arrow.png");
+    -fx-background-color: transparent;
+    -fx-background-radius: 0; 
+}
+#leftButton:hover{
+    -fx-graphic: url("left-arrow-hover.png"); 
+}
+#rightButton{
+    -fx-graphic: url("right-arrow.png");
+    -fx-background-color: transparent;
+    -fx-background-radius: 0; 
+}
+#rightButton:hover{
+    -fx-graphic: url("right-arrow-hover.png"); 
+}
+
+#btnBar{
+    -fx-background-color: #3f7692;
+}
+
+#btnResize{
+    -fx-graphic: url("button-resize.png");
+    -fx-background-color: transparent;
+    -fx-padding: 0;    
+}
+#btnResize:hover{
+    -fx-graphic: url("button-resize-hover.png");   
+}
+#btnClose{
+    -fx-background-color: #ff5b02;
+    -fx-graphic: url("button-close.png");
+    -fx-background-radius: 0;
+}
+#btnClose:hover{
+    -fx-background-color: #ff0279;
+}
+#btnMaximize{
+    -fx-graphic: url("button-maximize-hover.png");
+    -fx-background-color: #282f3d;
+    -fx-background-radius: 0;    
+}
+#btnMaximize:hover{
+    -fx-background-color: #3f7692;
+}
+
+#btnMinimize{
+    -fx-graphic: url("button-minimize-hover.png");
+    -fx-background-color: #282f3d;
+    -fx-background-radius: 0; 
+}
+#btnMinimize:hover{
+    -fx-background-color: #3f7692;
+    /*-fx-graphic: url("button-minimize-hover.png");*/
+}
+
+#btnDetectorStart{
+    /*-fx-background-image: url("button-detector-start.png");*/
+    -fx-background-repeat: no-repeat;
+    -fx-graphic: url("button-detector-start.png");
+}
+#btnDetectorStart:hover{
+    -fx-background-color: transparent;
+}
+
+/*MEDIA*/
+#btnPause{
+    -fx-background-color: transparent;
+    -fx-graphic: url("play.png")
+}
+#btnPause:selected{
+    -fx-graphic: url("pause.png")
+}
+
+.slider .thumb {
+    -fx-background-color: transparent;
+    -fx-background-image: url("slider-thumb.png");
+    -fx-background-insets: 0, 1, 2;
+    -fx-background-radius: 0; /* makes sure this remains circular */
+    -fx-padding: 0.583333em;  /* 7 */
+
+}
+
+.slider .track {
+     -fx-background-color: white;
+    -fx-background-insets: 2 0 3 0, 0, 1;
+    -fx-background-radius: 0;
+    -fx-padding: 0.25em; /* 3 */
+}
+
+#toggleFullscreen{
+    -fx-graphic: url("to-fullscreen.png");
+    -fx-background-color: transparent;
+}
+#toggleFullscreen:hover{
+    -fx-graphic: url("to-fullscreen-hover.png");
+}
+#toggleFullscreen:selected{
+    -fx-graphic: url("from-fullscreen.png");
+    -fx-background-color: transparent;
+}
+#toggleFullscreen:selected:hover{
+    -fx-graphic: url("from-fullscreen-hover.png");
+}

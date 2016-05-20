@@ -5,12 +5,14 @@ import javafx.application.Platform;
 import javafx.scene.control.Label;
 import viewer.Bridge;
 import viewer.VC.MainWindowController;
+import viewer.VC.PdfTController;
 
 public class DetectorController {
 
-    public DetectorController(Bridge bridgeReference) {
+    public DetectorController(Bridge bridgeReference, Detector detecorReference) {
         this.bridgeReference = bridgeReference;
         robot = com.sun.glass.ui.Application.GetApplication().createRobot();
+        this.detectorReference = detecorReference;
     }
     private static final int BUFFER_SIZE = 8;
     private static final float FINGER_COUNT_THRESHOLD = 0.5f;
@@ -30,7 +32,9 @@ public class DetectorController {
     private static int prevGesture = -1;
     private static double deltaX = 0.0;
     private static double deltaY = 0.0;
+    private static final float MOUSE_DELTA = 40.0f;
 
+    private static Detector detectorReference;
     private static Bridge bridgeReference;
     private static Robot robot;
     private static Label viewerStatus;
@@ -51,35 +55,36 @@ public class DetectorController {
             countRate[fingerCountBuffer[i]]++;
         }
         //pokud je četnost větší nebo se rovná prahu, gesto je přijato
-        gesture = -1;
+        gesture = 6;
         for (int i = 0; i < 6; i++) {
             if (countRate[i] >= threshold) {
                 gesture = i;
             }
         }
-
+        detectorReference.setRenderIcon(gesture);
         //TODO - dále analyzovat další odvozená gesta ??
         //pokud prst nebyl natažen, ale teď je - klik
         if (gesture == 1 && prevGesture != 1) {
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("press");
                     robot.mousePress(1);
                 }
             });
         }
         //pokud prst byl natažen, ale teď není - puštění
         else if (gesture != 1 && prevGesture == 1) {
-            System.out.println("release");
-            robot.mouseRelease(1);
-        }
-        else if (gesture == 2) {
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("Pravý klik");
-                    
+                    robot.mouseRelease(1);;
+                }
+            });
+        }
+        else if (gesture == 2 && prevGesture != 2) {
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
                     robot.mousePress(2);
                     robot.mouseRelease(2);
                 }
@@ -87,7 +92,7 @@ public class DetectorController {
         }
         else if (gesture == 3) {
 
-            if (deltaX > 40) {
+            if (deltaX > MOUSE_DELTA) {
                 Platform.runLater(new Runnable() {
                     @Override
                     public void run() {
@@ -95,7 +100,7 @@ public class DetectorController {
                     }
                 });
             }
-            else if (deltaX < -40) {
+            else if (deltaX < -MOUSE_DELTA) {
                 Platform.runLater(new Runnable() {
                     @Override
                     public void run() {
@@ -103,9 +108,30 @@ public class DetectorController {
                     }
                 });
             }
-
         }
-        System.out.println("gesto 3:   " + deltaX);
+        else if (gesture == 4) {
+            if (deltaX > MOUSE_DELTA) {
+                if (Bridge.View.valueOf(((MainWindowController) bridgeReference.getController(Bridge.View.MainWindowP)).getSelestedTab().getUserData().toString()) == Bridge.View.PdfT) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((PdfTController) bridgeReference.getController(Bridge.View.PdfT)).prevPage();
+                        }
+                    });
+                }
+            }
+
+            else if (deltaX < -MOUSE_DELTA) {
+                if (Bridge.View.valueOf(((MainWindowController) bridgeReference.getController(Bridge.View.MainWindowP)).getSelestedTab().getUserData().toString()) == Bridge.View.PdfT) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((PdfTController) bridgeReference.getController(Bridge.View.PdfT)).nextPage();
+                        }
+                    });
+                }
+            }
+        }
         prevGesture = gesture;
     }
 
@@ -126,8 +152,8 @@ public class DetectorController {
         averageCenterX /= BUFFER_SIZE;
         averageCenterY /= BUFFER_SIZE;
 
-        deltaX = (averageCenterX - prevAveragePalmCenterX);
-        deltaY = (averageCenterY - prevAveragePalmCenterY);
+        deltaX = averageCenterX - prevAveragePalmCenterX;
+        deltaY = averageCenterY - prevAveragePalmCenterY;
         prevAveragePalmCenterX = averageCenterX;
         prevAveragePalmCenterY = averageCenterY;
         if (gesture != 0) {

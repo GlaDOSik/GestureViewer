@@ -130,21 +130,25 @@ public class PdfTController extends Popup implements IControllerViewState {
     }
 
     @FXML
-    private void nextPage() {
+    public void nextPage() {
+
         currentPage++;
         if (currentPage > document.getNumberOfPages() - 1) {
             currentPage = 0;
         }
         renderCurrentPage();
+
     }
 
     @FXML
-    private void prevPage() {
+    public void prevPage() {
+
         currentPage--;
         if (currentPage < 0) {
             currentPage = document.getNumberOfPages() - 1;
         }
         renderCurrentPage();
+
     }
 
     @Override
@@ -204,11 +208,11 @@ public class PdfTController extends Popup implements IControllerViewState {
             mainGUI.addPopUp(Bridge.View.PdfT, mainGUI.getSelestedTab().getText(), false, false, null);
             scrlPane.prefWidthProperty().bind(getStage().widthProperty());
             imageView.fitWidthProperty().bind(getStage().widthProperty().subtract(150));
-            
+
             getStage().setFullScreenExitHint("");
             getStage().setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
             getStage().setFullScreen(true);
-            
+
         }
         else {
             scrlPane.prefWidthProperty().unbind();

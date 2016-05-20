@@ -12,10 +12,10 @@ import viewer.VC.MainWindowController;
 
 public class Bridge {
 
-    public Bridge(Stage primaryStage) {
-        viewerController = new DetectorController(this);
+    public Bridge(Stage primaryStage) {        
         controllers = new HashMap<>();
         detector = new Detector(this);
+        viewerController = new DetectorController(this, detector);
 
         loadViewController(View.MainWindowP, "VC/MainWindow.fxml");
 
@@ -27,12 +27,13 @@ public class Bridge {
         loadViewController(View.ImageT, "VC/ImageT.fxml");
         loadViewController(View.PdfT, "VC/PdfT.fxml");
         loadViewController(View.MediaT, "VC/MediaT.fxml");
+        loadViewController(View.HelpP, "VC/Help.fxml");
         
         detector.setImageView(((DebugWindowController) controllers.get(View.DebugWindowP)).getImageView1(), ((DebugWindowController) controllers.get(View.DebugWindowP)).getImageView2());
     }
 
     public enum View {
-        MainWindowP, DebugWindowP,
+        MainWindowP, DebugWindowP, HelpP,
         ImageT, PdfT, MediaT
     }
 

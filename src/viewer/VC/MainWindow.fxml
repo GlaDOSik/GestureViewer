@@ -52,7 +52,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Pomoc">
             <items>
-                  <MenuItem mnemonicParsing="false" text="Nápověda prohlížeče" />
+                  <MenuItem mnemonicParsing="false" onAction="#openHelpWindow" text="Nápověda prohlížeče" />
               <MenuItem mnemonicParsing="false" onAction="#openDebugWindow" text="Otevřít debug. okno" />
             </items>
           </Menu>

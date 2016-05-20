@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="215.0" prefWidth="418.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="viewer.VC.HelpController">
+   <children>
+      <Text fill="WHITE" layoutX="9.0" layoutY="44.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Rozevřená dlaň - Posun kurzoru&#10;Natažení jednoho prstu - Držení levého tlačítka myši&#10;Změna výše uvedeného gesta - Puštění levého tlačítka myši&#10;Natažení dvou prstů - Kliknutí levým tlačítkem myši&#10;Tři prsty + rychlý pohyb doleva - Předchozí soubor&#10;Tři prsty + rychlý pohyb doprava - Další soubor&#10;Čtyři prsty + rychlý pohyb doleva - Předchozí list dokumentu&#10;Čtyři prsty + rychlý pohyb doprava - Další list dokumentu&#10;Zatnutá pěst - Žádná akce, zablokovaný posun kurzoru">
+         <font>
+            <Font size="15.0" />
+         </font></Text>
+      <Button fx:id="btnClose" layoutX="373.0" minHeight="25.0" minWidth="45.0" mnemonicParsing="false" onAction="#closeDebug" prefHeight="25.0" prefWidth="45.0" />
+   </children>
+</AnchorPane>

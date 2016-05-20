@@ -388,7 +388,6 @@ public class MainWindowController extends Popup {
     private void detectorStartStop() {
         if (!getBridgeReference().getDetector().isDetectorActive()) {
             btnDetectorStart.setStyle("-fx-graphic: url('viewer/skins/DarkDefault/button-detector-stop.png');");
-            lblViewerStatus.setText("Přesuňte se prosím mimo záběr kamery. Učím se pozadí.");
             getBridgeReference().getDetector().start();
         }
         else {
@@ -406,6 +405,10 @@ public class MainWindowController extends Popup {
     private void openDebugWindow() {
         addPopUp(Bridge.View.DebugWindowP, "Debugovací okno", true, false, null);
         getBridgeReference().getDetector().setShowDebugData(true);
+    }
+    @FXML
+    private void openHelpWindow() {
+        addPopUp(Bridge.View.HelpP, "Pomoc", true, false, null);
     }
 
     public void setFilesCount(File[] filesInDirectory, int fileIndex, int offset, boolean clearLabel) {

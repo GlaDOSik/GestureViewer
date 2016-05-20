@@ -22,20 +22,24 @@ import org.opencv.core.MatOfPoint2f;
  * Třída pomocných funkcí
  */
 public class Helper {
+    
+    private MatOfPoint empty = new MatOfPoint();
+    private int maxAreaI = -1;
 
     public Image mat2Img(Mat frame) {
         MatOfByte buffer = new MatOfByte();
         Imgcodecs.imencode(".png", frame, buffer);
-        return new Image(new ByteArrayInputStream(buffer.toArray()));        
+        return new Image(new ByteArrayInputStream(buffer.toArray()));    
     }
-
+    
+   
     public MatOfPoint findBiggestContour(List<MatOfPoint> contours, double thresholdArea) {
         double maxArea = -1;
-        int maxAreaI = -1;
+        maxAreaI = -1;
 
         //kontury
         for (int i = 0; i < contours.size(); i++) {
-            //oblast kontury
+            //oblast pro každou konturu
             double contourArea = Imgproc.contourArea(contours.get(i));
             //najde největší oblast
             if (contourArea > maxArea) {
@@ -44,11 +48,13 @@ public class Helper {
             }
         }
         if (maxArea < thresholdArea) {
-            return new MatOfPoint();
+            return empty;
         }
         MatOfPoint tempMat = contours.get(maxAreaI);
         return tempMat;
     }
+    
+ 
 
     public MatOfPoint hullInts2Points(MatOfPoint contour, MatOfInt hull) {
         Point[] hullPoints = new Point[hull.rows()];

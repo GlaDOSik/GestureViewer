@@ -30,52 +30,80 @@ import viewer.VC.MainWindowController;
 
 public class Detector implements IDetector {
 
+    private int renderGesture = 6;
+    private final Point textPos = new Point(20, 30);
     //předlohy pro testování podobnosti tvarů
     /*
     private final String[] TEMPLATE_NAMES = {"devilHorn.png", "fist.png", "indexFinger.png", "ok.png", "openHand.png", "pick.png"};  
     private final double[] similarity = new double[TEMPLATE_NAMES.length];*/
     //konstanty pro MOG2
-    private final int BG_SUB_LEARNING_FRAMES = 30;
-    private final int BG_SUB_HISTORY = 30;
-    private final double BG_SUB_THRESHOLD = 11.0;
+    private final int BG_SUB_LEARNING_FRAMES = 50;
+    private final int BG_SUB_HISTORY = 50;
+    private final double BG_SUB_THRESHOLD = 4.0;
+    //pokud je (RELEARN_THRESHOLD * 100) % pixelů v obrazu detekováno jako kontura, nejspíš se změnilisvětelné podmínky
+    // nebo se posunula kamera, detektor se pak sám přeučí
+    private final float RELEARN_THRESHOLD = 0.55f;
 
     //kernel pro dilataci a erozi
-    private final Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(6, 6));
+    private final Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(8, 8));
+    //práh velikosti největší kontury
+    private final int CONTOUR_AREA = 15000;
+    
     //práh hloubky defektů
     private final int CONV_DEF_DEPTH_THRESHOLD = 4000;
     //vyfiltruje pryč defekty x pixelů nad spodním okrajem obrazu
     private final int CONV_DEF_EDGE_OFFSET = 30;
     //okolí pro redukci shluků bodů
     private final int FILTER_POINTS_AROUND = 20;
+
     //poloměr dlaně vynásobený fingerDetectionThreshold udává plochu, kde se body neakceptují jako prsty
     private float fingerDetectionThreshold = 1.4f;
     private final float FINGER_DET_THRESHOLD_MIN = fingerDetectionThreshold;
     //fingerDetectionThreshold se změní na FINGER_DET_THRESHOLD_MAX, pokud není natažen žádný prst - pěst
     //pomáhá tak lépe maskovat nežádoucí body
-    private final float FINGER_DET_THRESHOLD_COUNT_0 = 2.0f;
+    private final float FINGER_DET_THRESHOLD_COUNT_0 = 1.9f;
     //stejné, jen pro jeden prst
-    private final float FINGER_DET_THRESHOLD_COUNT_1 = 1.7f;
+    private final float FINGER_DET_THRESHOLD_COUNT_1 = 1.6f;
+    //pokud se natáhne jeden prst, detekovaný střed dlaně klesne, tato hodnota to kompenzuje
+    //private final float ONE_FINGER_Y_OFFSET = -1.3f;
 
     private final VideoCapture vc;
+    private final BackgroundSubtractorMOG2 bgsubMOG2;
     private final Helper helper;
     private ScheduledExecutorService executor;
     private boolean isDetectorActive = false;
     private boolean showDebugData = false;
     private boolean capture = false;
 
+    //výstup z kamery
+    private final Mat sourceFrame;
+    //výstup MOG2
+    private final Mat maskFrame;
+    //seznam kontur
+    private List<MatOfPoint> contours;
+    //seznam s jednou dominantní konturou pro vykreslení
+    List<MatOfPoint> cstd;
+    //indexy konvexního polygonu
+    private MatOfInt hull;
+
     private ImageView finnalImg;
-    private ImageView rawImg;
     private ImageView foregroundImg;
-    Bridge bridge;
+    Bridge bridgeReference;
 
     private final List<MatOfPoint> templateContours;
+    
+    private final Scalar CONTOUR_COLOR = new Scalar(12, 245, 0);
 
     public Detector(Bridge bridge) {
         templateContours = new ArrayList<>();
         helper = new Helper();
         vc = new VideoCapture();
-        this.bridge = bridge;
-
+        this.bridgeReference = bridge;
+        bgsubMOG2 = Video.createBackgroundSubtractorMOG2(BG_SUB_HISTORY, BG_SUB_THRESHOLD, false);
+        sourceFrame = new Mat();
+        maskFrame = new Mat();                
+        contours = new ArrayList<>();
+        cstd = new ArrayList<>();
         /// POROVNÁNÍ TVARŮ
         /*  for (int i = 0; i < similarity.length; i++) {
             similarity[i] = 0.0;
@@ -95,59 +123,67 @@ public class Detector implements IDetector {
 
         if (vc.open(0)) {
             isDetectorActive = true;
-        }
-        else {
+        } else {
             isDetectorActive = false;
         }
 
-        BackgroundSubtractorMOG2 bgsubMOG2 = Video.createBackgroundSubtractorMOG2(BG_SUB_HISTORY, BG_SUB_THRESHOLD, false);
-
+        //tady se vytvářel lokální MOG2
         // Jádro detektoru
         Runnable detector = new Runnable() {
-            Mat sourceFrame = new Mat();
-            Mat maskFrame = new Mat();
             int learningCounter = BG_SUB_LEARNING_FRAMES;
             Point palmCenter = new Point();
 
-            // doplnit přeučení při změně pozadí
             @Override
             public void run() {
                 vc.read(sourceFrame);
                 if (learningCounter > 0) {
-
-                    bgsubMOG2.apply(sourceFrame, maskFrame);
-                    learningCounter--;
-                    if (learningCounter == 1) {
+                    if (learningCounter == BG_SUB_LEARNING_FRAMES) {
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
-                                ((MainWindowController) bridge.getController(Bridge.View.MainWindowP)).setViewerStatus("Detektor je naučen, lze ovládat program kamerou.");
+                                ((MainWindowController) bridgeReference.getController(Bridge.View.MainWindowP)).setViewerStatus("Přesuňte se prosím mimo záběr kamery. Učím se pozadí.");
+                            }
+                        });
+                    } else if (learningCounter == 1) {
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                ((MainWindowController) bridgeReference.getController(Bridge.View.MainWindowP)).setViewerStatus("Detektor je naučen, lze ovládat program kamerou.");
                             }
                         });
                     }
-                }
-                else {
+                    bgsubMOG2.apply(sourceFrame, maskFrame);
+                    learningCounter--;
+                    return;
+                } else {
                     bgsubMOG2.apply(sourceFrame, maskFrame, 0);
                 }
+                
                 if (capture == true) {
                     Imgcodecs.imwrite("01Source.png", sourceFrame);
                     Imgcodecs.imwrite("02MaskRaw.png", maskFrame);
                 }
-
+                
                 Imgproc.erode(maskFrame, maskFrame, kernel);
                 Imgproc.dilate(maskFrame, maskFrame, kernel);
 
+                //přeučení při změně světelných podmínek
+                if ((float) Core.countNonZero(maskFrame) / (float) (maskFrame.rows() * maskFrame.cols()) > RELEARN_THRESHOLD) {
+                    learningCounter = BG_SUB_LEARNING_FRAMES;
+                    return;
+                }
+
                 if (capture == true) {
-                    Imgcodecs.imwrite("03MaskAfterErode.png", maskFrame);
+                    Imgcodecs.imwrite("03MaskAfterMO.png", maskFrame);
                 }
                 if (showDebugData) {
                     foregroundImg.setImage(helper.mat2Img(maskFrame));
                 }
 
-                List<MatOfPoint> contours = new ArrayList<>();
+                //nalezení kontur, vybrání té největší
+                contours.clear();
                 Imgproc.findContours(maskFrame, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-                MatOfPoint contour = helper.findBiggestContour(contours, 20000);
-
+                MatOfPoint contour = helper.findBiggestContour(contours, CONTOUR_AREA);
                 if (contour.rows() > 10) {
 
                     /// POROVNÁNÍ TVARŮ
@@ -162,12 +198,12 @@ public class Detector implements IDetector {
                     }
                     System.out.println("Gesto je: " + TEMPLATE_NAMES[minSimilarityIndex]);*/
                     //vykreslení kontury
-                    List<MatOfPoint> cstd = new ArrayList<>();
+                    cstd.clear();
                     cstd.add(contour);
-                    Imgproc.drawContours(sourceFrame, cstd, -1, new Scalar(12, 245, 0), 5);
+                    Imgproc.drawContours(sourceFrame, cstd, -1, CONTOUR_COLOR, 5);
 
-                    //hull
-                    MatOfInt hull = new MatOfInt();
+                    //nalezení konvexního polygonu obepínajícího konturu
+                    hull = new MatOfInt();
                     Imgproc.convexHull(contour, hull);
 
                     List<MatOfPoint> hullMat = new ArrayList<>();
@@ -188,16 +224,12 @@ public class Detector implements IDetector {
                     palmCenter.x = 0;
                     palmCenter.y = 0;
                     for (int j = 0; j < convDefects.rows(); j++) {
-                        int convDefectsIndexes[] = new int[4];
-                        //convDefectsIndexes[0] = (int) convDefects.get(j, 0)[0]; //začátek
-                        //convDefectsIndexes[1] = (int) convDefects.get(j, 0)[1]; //konec
-                        convDefectsIndexes[2] = (int) convDefects.get(j, 0)[2]; //defekt
-                        convDefectsIndexes[3] = (int) convDefects.get(j, 0)[3]; //hloubka
+                        int convDefectsIndexes[] = new int[2];
+                        convDefectsIndexes[0] = (int) convDefects.get(j, 0)[2]; //defekt
+                        convDefectsIndexes[1] = (int) convDefects.get(j, 0)[3]; //hloubka
                         //odstraníme defekty pod určitým prahem
-                        if (convDefectsIndexes[3] > CONV_DEF_DEPTH_THRESHOLD) {
-                            //Point pointStart = new Point(contour.get(convDefectsIndexes[0], 0)[0], contour.get(convDefectsIndexes[0], 0)[1]);
-                            //Point pointEnd = new Point(contour.get(convDefectsIndexes[1], 0)[0], contour.get(convDefectsIndexes[1], 0)[1]);
-                            Point pointFar = new Point(contour.get(convDefectsIndexes[2], 0)[0], contour.get(convDefectsIndexes[2], 0)[1]);
+                        if (convDefectsIndexes[1] > CONV_DEF_DEPTH_THRESHOLD) {
+                            Point pointFar = new Point(contour.get(convDefectsIndexes[0], 0)[0], contour.get(convDefectsIndexes[0], 0)[1]);
                             //odstraníme defekty pod u spodního okraje obrazu
                             if (pointFar.y <= sourceFrame.rows() - CONV_DEF_EDGE_OFFSET) {
                                 defPointsFar.add(pointFar);
@@ -219,10 +251,8 @@ public class Detector implements IDetector {
                             tips.add(nextP);
                             palmCenter.x += nextP.x;
                             palmCenter.y += nextP.y;
-                            Imgproc.circle(sourceFrame, nextP, 5, new Scalar(0, 255, 255), 8);
                         }
                     }
-
                     //přibližná poloha dlaně
                     palmCenter.x /= defPointsFar.size() + tips.size();
                     palmCenter.y /= defPointsFar.size() + tips.size();
@@ -233,33 +263,37 @@ public class Detector implements IDetector {
                     }
 
                     palmRadius /= defPointsFar.size();
-                    Imgproc.circle(sourceFrame, palmCenter, (int) palmRadius, new Scalar(255, 255, 255), 8);
-                    Imgproc.circle(sourceFrame, palmCenter, (int) (palmRadius * fingerDetectionThreshold), new Scalar(255, 255, 255), 3);
 
                     //detekce počtu prstů
                     int fingerCount = 0;
                     //méně než 3 defekty je většinou pěst
                     if (defPointsFar.size() >= 3) {
                         for (int i = 0; i < tips.size(); i++) {
-                            double tipDistance = Math.sqrt(((tips.get(i).x - palmCenter.x) * (tips.get(i).x - palmCenter.x)) + ((tips.get(i).y - palmCenter.y) * (tips.get(i).y - palmCenter.y)));
-                            if (tipDistance > palmRadius * fingerDetectionThreshold && tips.get(i).y < palmCenter.y + palmRadius) {
+                            Point p = tips.get(i);
+                            double tipDistance = Math.sqrt(((p.x - palmCenter.x) * (p.x - palmCenter.x)) + ((p.y - palmCenter.y) * (p.y - palmCenter.y)));
+                            if (tipDistance > palmRadius * fingerDetectionThreshold && p.y < palmCenter.y + palmRadius) {
                                 fingerCount++;
+                                Imgproc.circle(sourceFrame, p, 5, new Scalar(0, 0, 255), 8);
                             }
                         }
                     }
-
-                    
+       
                     if (fingerCount == 0) {
                         fingerDetectionThreshold = FINGER_DET_THRESHOLD_COUNT_0;
-                    }
-                    else if (fingerCount == 1) {
+                    } else if (fingerCount == 1) {
                         fingerDetectionThreshold = FINGER_DET_THRESHOLD_COUNT_1;
-                    }
-                    else{
+                        //mouseOffsetY = ONE_FINGER_Y_OFFSET;
+                    } else {
                         fingerDetectionThreshold = FINGER_DET_THRESHOLD_MIN;
                     }
+                              
+                    Imgproc.circle(sourceFrame, palmCenter, (int) palmRadius, new Scalar(255, 255, 255), 8);
+                    Imgproc.circle(sourceFrame, palmCenter, (int) (palmRadius * fingerDetectionThreshold), new Scalar(255, 255, 255), 3);
+
                     DetectorController.setFingerCount(Math.min(fingerCount, 5));
                     DetectorController.setPalmCenter(palmCenter.x, palmCenter.y);
+
+                    Imgproc.putText(sourceFrame, String.format("%d", renderGesture), textPos, 0, 1, new Scalar(255, 255, 255), 3);
 
                 }
                 if (showDebugData) {
@@ -281,8 +315,7 @@ public class Detector implements IDetector {
             executor.shutdown();
             try {
                 executor.awaitTermination(33, TimeUnit.MILLISECONDS);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -296,7 +329,6 @@ public class Detector implements IDetector {
         return isDetectorActive;
     }
 
-
     public boolean showDebugData() {
         return showDebugData;
     }
@@ -308,6 +340,10 @@ public class Detector implements IDetector {
     public void setImageView(ImageView view1, ImageView view2) {
         finnalImg = view1;
         foregroundImg = view2;
+    }
+
+    public void setRenderIcon(int icon) {
+        renderGesture = icon;
     }
 
 }
